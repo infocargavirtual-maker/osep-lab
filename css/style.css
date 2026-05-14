@@ -63,6 +63,7 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
 .ub-modal-actions{display:flex;gap:10px;justify-content:flex-end}
 .ub-modal-actions button{font-family:'IBM Plex Mono',monospace;font-size:11px;border-radius:3px;cursor:pointer}
 .ub-modal-actions .cancel{padding:8px 18px;background:none;border:1px solid #4a6080;color:#7a98bc}
+.ub-modal-actions .danger{padding:8px 18px;background:rgba(244,63,94,.15);border:1px solid #f43f5e;color:#f43f5e;font-weight:600}
 .ub-modal-actions .confirm{padding:8px 22px;background:linear-gradient(90deg,#00ffc8,#00c8ff);border:none;color:#0a0f1e;font-weight:700}
 
 /* ── BANDA DE PARTE ─────────────────────────────────── */
@@ -153,6 +154,8 @@ tr:hover td{background:rgba(0,200,255,.03)}
 .f-btn.all{background:rgba(0,200,255,.2);border-color:#00c8ff;color:#00c8ff}
 .f-btn.conub{background:rgba(0,255,200,.06);color:#00ffc8}
 .f-btn.sinub{background:rgba(244,63,94,.06);color:#f43f5e}
+.f-btn.new-prac{background:rgba(250,204,21,.12);border-color:#facc15;color:#facc15;font-weight:600}
+.f-btn.new-prac:hover{background:rgba(250,204,21,.22)}
 .search-count{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7a98bc;white-space:nowrap}
 
 .tbl-wrap{border:1px solid #1e3a5f;border-radius:4px;overflow:hidden}

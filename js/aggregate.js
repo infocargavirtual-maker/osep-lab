@@ -136,11 +136,17 @@ function aggregateAll() {
 // de UB que hace el usuario se reflejen aún sin archivos cargados.
 function baseStateFromOverrides() {
   // r en BASE_ALL_PRAC: [cod, analo, nombre, cant, ub_unit_orig, ub_total_orig, osep_M]
-  const allObj = BASE_ALL_PRAC.map(r => {
+  const fromBase = BASE_ALL_PRAC.map(r => {
     const c = r[0], a = r[1], p = r[2], n = r[3];
     const uu = getUB(c, a);          // respeta MANUAL_UB_OVERRIDES
     return {c, a, p, n, uu, ut: uu * n, osep: (r[6] || 0) * 1e6};
-  }).sort((x, y) => y.n - x.n);
+  });
+  // Prácticas agregadas a mano por el usuario (cant=0, sin consumos aún)
+  const baseKeys = new Set(fromBase.map(r => r.c + '_' + r.a));
+  const fromNew = NEW_PRACTICES
+    .filter(np => !baseKeys.has(np.c + '_' + np.a))
+    .map(np => ({c: np.c, a: np.a, p: np.p, n: 0, uu: getUB(np.c, np.a), ut: 0, osep: 0}));
+  const allObj = [...fromBase, ...fromNew].sort((x, y) => y.n - x.n);
 
   const conUB = allObj.filter(r => r.uu  >  0);
   const sinUB = allObj.filter(r => r.uu === 0);

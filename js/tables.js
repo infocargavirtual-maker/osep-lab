@@ -99,7 +99,7 @@ function renderTable() {
       const hasPending   = PENDING_CHANGES.some(p => p.key === key);
       const isOverridden = key in MANUAL_UB_OVERRIDES;
 
-      const btnLabel = hasPending ? '↩ DESHACER' : hasUB ? 'SACAR' : 'AGREGAR';
+      const btnLabel = hasPending ? '↩ DESHACER' : hasUB ? '✎ EDITAR' : '+ AGREGAR';
       const btnColor = hasPending ? '#facc15'    : hasUB ? '#f43f5e' : '#00ffc8';
       const btnBg    = hasPending ? 'rgba(250,204,21,.15)' : hasUB ? 'rgba(244,63,94,.12)' : 'rgba(0,255,200,.12)';
 
@@ -180,9 +180,10 @@ function sortTable(col) {
 }
 
 // ── Toggle convenio Biofarma ─────────────────────────
+// Abre el modal en modo agregar (UB=0) o modificar (UB>0).
+// Si ya hay un cambio pendiente para esta práctica, lo deshace.
 function proposeUBChange(cod, analo, name, currentUB) {
   const key = cod + '_' + analo;
-  // Si ya está pendiente, deshacer
   const idx = PENDING_CHANGES.findIndex(p => p.key === key);
   if (idx >= 0) {
     PENDING_CHANGES.splice(idx, 1);
@@ -191,21 +192,21 @@ function proposeUBChange(cod, analo, name, currentUB) {
     return;
   }
 
-  if (currentUB > 0) {
-    // SACAR del convenio — UB = 0, sin modal
-    PENDING_CHANGES.push({key, name, cod, analo, oldUB:currentUB, newUB:0, action:'SACAR del convenio Biofarma'});
-    renderPendingPanel(true);
-    renderTable();
-  } else {
-    // AGREGAR al convenio — pedir UB
-    _modalTarget = {cod, analo, name, key};
-    document.getElementById('modal-prac-name').textContent = name;
-    document.getElementById('modal-prac-cod').textContent  = 'Código: ' + cod + ' · Análogo: ' + analo;
-    document.getElementById('modal-ub-input').value = '';
-    const modal = document.getElementById('ub-modal');
-    modal.style.display = 'flex';
-    setTimeout(() => document.getElementById('modal-ub-input').focus(), 100);
-  }
+  _modalTarget = {cod, analo, name, key, currentUB};
+  const isEdit = currentUB > 0;
+  document.getElementById('modal-head').textContent      = isEdit ? 'MODIFICAR UB DE LA PRÁCTICA' : 'AGREGAR AL CONVENIO BIOFARMA';
+  document.getElementById('modal-prac-name').textContent = name;
+  document.getElementById('modal-prac-cod').textContent  = 'Código: ' + cod + ' · Análogo: ' + analo + (isEdit ? ' · UB actual: ' + currentUB : '');
+  document.getElementById('modal-ub-input').value        = isEdit ? currentUB : '';
+  document.getElementById('modal-sacar').style.display   = isEdit ? '' : 'none';
+
+  const modal = document.getElementById('ub-modal');
+  modal.style.display = 'flex';
+  setTimeout(() => {
+    const inp = document.getElementById('modal-ub-input');
+    inp.focus();
+    inp.select();
+  }, 100);
 }
 
 function closeModal() {
@@ -213,21 +214,87 @@ function closeModal() {
   _modalTarget = null;
 }
 
-function confirmAddToConvenio() {
+// Confirma guardar el valor escrito en el input (agregar o modificar)
+function confirmUBChange() {
   const t = _modalTarget;
   if (!t) return;
-  const val = parseFloat(document.getElementById('modal-ub-input').value);
-  if (!val || val <= 0) {
-    alert('Ingresá un valor de UB válido (mayor a 0).');
+  const raw = document.getElementById('modal-ub-input').value;
+  const val = parseFloat(raw);
+  if (raw === '' || isNaN(val) || val < 0) {
+    alert('Ingresá un valor de UB válido (0 o mayor).');
     return;
   }
+  if (val === t.currentUB) {
+    closeModal();
+    return;
+  }
+  const oldUB = t.currentUB || 0;
+  let action;
+  if (oldUB > 0 && val === 0)        action = 'SACAR del convenio Biofarma';
+  else if (oldUB === 0 && val > 0)   action = 'AGREGAR al convenio Biofarma (' + val + ' UB)';
+  else                               action = 'MODIFICAR UB de ' + oldUB + ' a ' + val;
+
+  PENDING_CHANGES.push({key:t.key, name:t.name, cod:t.cod, analo:t.analo, oldUB, newUB:val, action});
+  closeModal();
+  renderPendingPanel(true);
+  renderTable();
+}
+
+// Atajo: el botón "SACAR DEL CONVENIO" del modal pone UB=0 directo
+function sacarFromModal() {
+  const t = _modalTarget;
+  if (!t) return;
   PENDING_CHANGES.push({
     key:t.key, name:t.name, cod:t.cod, analo:t.analo,
-    oldUB:0, newUB:val, action:'AGREGAR al convenio Biofarma (' + val + ' UB)',
+    oldUB:t.currentUB || 0, newUB:0, action:'SACAR del convenio Biofarma',
   });
   closeModal();
   renderPendingPanel(true);
   renderTable();
+}
+
+// Compatibilidad con el binding anterior
+const confirmAddToConvenio = confirmUBChange;
+
+// ── Agregar una práctica nueva al listado ────────────
+function openNewPracticeModal() {
+  document.getElementById('np-cod').value    = '';
+  document.getElementById('np-analo').value  = '0';
+  document.getElementById('np-nombre').value = '';
+  document.getElementById('np-ub').value     = '0';
+  document.getElementById('new-prac-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('np-cod').focus(), 100);
+}
+
+function closeNewPracticeModal() {
+  document.getElementById('new-prac-modal').style.display = 'none';
+}
+
+function confirmNewPractice() {
+  const cod   = parseInt(document.getElementById('np-cod').value, 10);
+  const analo = parseInt(document.getElementById('np-analo').value, 10) || 0;
+  const name  = document.getElementById('np-nombre').value.trim().toUpperCase();
+  const ub    = parseFloat(document.getElementById('np-ub').value);
+
+  if (!cod || cod <= 0)               { alert('Ingresá un código numérico válido.'); return; }
+  if (!name || name.length < 3)       { alert('Ingresá una descripción (mínimo 3 caracteres).'); return; }
+  if (isNaN(ub) || ub < 0)            { alert('Ingresá una UB válida (0 o mayor).'); return; }
+
+  const key = cod + '_' + analo;
+  // Chequear que no exista ya
+  const existsInBase = BASE_ALL_PRAC.some(r => r[0] === cod && r[1] === analo);
+  const existsInNew  = NEW_PRACTICES.some(p => p.c === cod && p.a === analo);
+  if (existsInBase || existsInNew) {
+    alert('Ya existe una práctica con código ' + cod + ' / análogo ' + analo + '.\nBuscala en el listado y editala con SACAR/EDITAR.');
+    return;
+  }
+
+  NEW_PRACTICES.push({c:cod, a:analo, p:name, uu:ub});
+  if (ub > 0) MANUAL_UB_OVERRIDES[key] = ub;
+  saveNewPractices();
+  saveOverrides();
+  closeNewPracticeModal();
+  renderAll();
 }
 
 // ── Panel pendientes ─────────────────────────────────

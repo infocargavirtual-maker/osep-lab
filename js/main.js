@@ -52,19 +52,38 @@ function _bindButtons() {
   // Modal UB
   const mc = document.getElementById('modal-cancel');
   const mk = document.getElementById('modal-confirm');
+  const ms = document.getElementById('modal-sacar');
   if (mc) mc.addEventListener('click', closeModal);
-  if (mk) mk.addEventListener('click', confirmAddToConvenio);
+  if (mk) mk.addEventListener('click', confirmUBChange);
+  if (ms) ms.addEventListener('click', sacarFromModal);
+
+  // Modal NUEVA PRÁCTICA
+  const npBtn = document.getElementById('btnNewPrac');
+  const npC   = document.getElementById('np-cancel');
+  const npK   = document.getElementById('np-confirm');
+  if (npBtn) npBtn.addEventListener('click', openNewPracticeModal);
+  if (npC)   npC.addEventListener('click',  closeNewPracticeModal);
+  if (npK)   npK.addEventListener('click',  confirmNewPractice);
 
   // Botón imprimir / PDF — FIX bug #5: usa Ctrl+P nativo del browser
   const pdf = document.getElementById('pdfBtn');
   if (pdf) pdf.addEventListener('click', () => window.print());
 
-  // Teclas globales para el modal
+  // Teclas globales para los modales
   document.addEventListener('keydown', e => {
-    const modal = document.getElementById('ub-modal');
-    if (!modal) return;
-    if (e.key === 'Escape') closeModal();
-    if (e.key === 'Enter' && modal.style.display === 'flex') confirmAddToConvenio();
+    const ubModal = document.getElementById('ub-modal');
+    const npModal = document.getElementById('new-prac-modal');
+    if (e.key === 'Escape') {
+      if (ubModal && ubModal.style.display === 'flex') closeModal();
+      if (npModal && npModal.style.display === 'flex') closeNewPracticeModal();
+    }
+    if (e.key === 'Enter') {
+      if (ubModal && ubModal.style.display === 'flex') confirmUBChange();
+      else if (npModal && npModal.style.display === 'flex') {
+        // Solo confirmar si el foco no está en el input de descripción multiline
+        confirmNewPractice();
+      }
+    }
   });
 }
 
