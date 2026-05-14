@@ -1,0 +1,50 @@
+// ── js/state.js ───────────────────────────────────────
+// Estado persistente en localStorage:
+//   - SESSIONS: archivos SISAO cargados (acumulan)
+//   - MANUAL_UB_OVERRIDES: cambios manuales al UB_MAP del usuario
+//   - PENDING_CHANGES: cola en memoria, no persistida
+
+const SK_SESSIONS  = 'osep_sessions_v1';
+const SK_OVERRIDES = 'osep_ub_overrides_v1';
+
+let SESSIONS = (() => {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SK_SESSIONS) || '[]');
+    return raw.filter(s => s && s.id && s.pracMap && typeof s.pracMap === 'object');
+  } catch(e) {
+    localStorage.removeItem(SK_SESSIONS);
+    return [];
+  }
+})();
+
+let MANUAL_UB_OVERRIDES = (() => {
+  try { return JSON.parse(localStorage.getItem(SK_OVERRIDES) || '{}'); }
+  catch(e){ return {}; }
+})();
+
+let PENDING_CHANGES = [];
+
+// Target del modal "AGREGAR al convenio"
+let _modalTarget = null;
+
+// Tabla actual de prácticas para el buscador (se reasigna en aggregate.js)
+let ALL_PRAC = BASE_ALL_PRAC.slice();
+
+// ── persistencia ──────────────────────────────────────
+function saveSessions() {
+  try { localStorage.setItem(SK_SESSIONS, JSON.stringify(SESSIONS)); }
+  catch(e){ console.warn('localStorage lleno', e); }
+}
+function saveOverrides() {
+  try { localStorage.setItem(SK_OVERRIDES, JSON.stringify(MANUAL_UB_OVERRIDES)); }
+  catch(e){}
+}
+
+// ── UB lookup con overrides ──────────────────────────
+// Búsqueda: 1) override manual del usuario  2) UB_MAP exacto  3) UB_MAP por código solo
+function getUB(cod, analo) {
+  const key = cod + '_' + analo;
+  if (key in MANUAL_UB_OVERRIDES) return MANUAL_UB_OVERRIDES[key];
+  if (key in UB_MAP)              return UB_MAP[key];
+  return UB_MAP[cod + '_0'] || 0;
+}

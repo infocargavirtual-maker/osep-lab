@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Convenio 2.868 – Laboratorio OSEP</title>
+
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+
+<script src="libs/chart.umd.min.js"></script>
+<script src="libs/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<!-- ── BOTÓN IMPRIMIR / PDF ───────────────────────────── -->
+<button class="pdf-btn" id="pdfBtn" title="Imprime el informe (Ctrl+P)">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+  </svg>
+  <span>IMPRIMIR / PDF</span>
+</button>
+
+<!-- ── HEADER ─────────────────────────────────────────── -->
+<div class="header">
+  <div class="hbadge">INFORME EJECUTIVO</div>
+
+  <!-- Barra de progreso UB -->
+  <div class="ub-progress-box">
+    <div class="ub-progress-head">
+      <div>
+        <div class="ub-progress-label">PROGRESO UB MENSUAL — META: 1.100.000 UB</div>
+        <div class="ub-progress-vals">
+          <span id="ub-progress-val">317.361 UB consumidas</span>
+          <span class="sep">·</span>
+          <span id="ub-progress-rest" class="rest">782.639 UB restantes para la meta</span>
+        </div>
+      </div>
+      <div class="ub-progress-pct" id="ub-progress-pct">28.9%</div>
+    </div>
+    <div class="ub-progress-bar"><div id="ub-progress-fill" class="ub-progress-fill"></div></div>
+    <div class="ub-progress-ticks">
+      <span>0</span><span>275.000</span><span>550.000</span><span>825.000</span><span class="meta">1.100.000</span>
+    </div>
+  </div>
+
+  <!-- Zona de carga -->
+  <div class="upload-zone" id="upload-zone">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00c8ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+    </svg>
+    <div style="flex:1">
+      <div class="upload-label" id="upload-label">
+        AGREGAR ARCHIVO SISAO (.xls / .xlsx) — los archivos SE ACUMULAN
+      </div>
+      <div class="upload-status" id="upload-status">
+        Arrastrá o hacé click · Cada archivo suma al período total · Podés eliminar archivos individuales
+      </div>
+    </div>
+    <input type="file" id="fileInput" accept=".xls,.xlsx" style="display:none" multiple>
+  </div>
+
+  <!-- Panel de archivos cargados -->
+  <div class="sessions-panel" id="sessions-panel">
+    <div class="sessions-panel-head">
+      <span>ARCHIVOS CARGADOS</span>
+      <button class="btn-clear-all" id="btn-clear-all">ELIMINAR TODO</button>
+    </div>
+    <div id="sessions-list"></div>
+  </div>
+
+  <!-- Modal UB -->
+  <div class="ub-modal" id="ub-modal">
+    <div class="ub-modal-box">
+      <div class="ub-modal-head">AGREGAR AL CONVENIO BIOFARMA</div>
+      <div class="ub-modal-name" id="modal-prac-name"></div>
+      <div class="ub-modal-cod" id="modal-prac-cod"></div>
+      <label class="ub-modal-label">VALOR EN UNIDADES BIOQUÍMICAS (UB):</label>
+      <input id="modal-ub-input" type="number" min="0.5" max="500" step="0.5" placeholder="Ej: 15" class="ub-modal-input">
+      <div class="ub-modal-hint">Consultá el nomenclador Biofarma para verificar el valor correcto antes de confirmar.</div>
+      <div class="ub-modal-actions">
+        <button class="cancel" id="modal-cancel">CANCELAR</button>
+        <button class="confirm" id="modal-confirm">CONFIRMAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel cambios pendientes -->
+  <div class="pending-panel" id="pending-panel"></div>
+
+  <h1>Convenio <span>2.868</span> — Red Propia Laboratorios Bioquímica</h1>
+  <div class="hsub">
+    <span>OSEP · Efector Propio – EP</span>
+    <span id="header-periodo">Período: 01 al 11 de Mayo 2026 · 11 días</span>
+    <span>Prestador externo: Droguería Biofarma</span>
+    <span>Generado: <span id="header-generado"></span></span>
+  </div>
+</div>
+
+<!-- ══ PARTE 1 ══════════════════════════════════════════ -->
+<div class="part-banner p1">
+  <div class="part-num">01</div>
+  <div class="part-title">
+    <h2>Total del Convenio — Todos los Indicadores</h2>
+    <p>Totalidad de prácticas consumidas, incluye determinaciones con y sin equivalencia en Unidades Bioquímicas</p>
+  </div>
+  <div class="part-tag" style="border-color:var(--accent);color:var(--accent)">GLOBAL</div>
+</div>
+
+<div class="main">
+  <div class="st">Indicadores clave del período</div>
+  <div class="kgrid k5">
+    <div class="kcard" style="--kc:#00c8ff"><div class="klabel">Total Prácticas</div><div class="kval"><span id="kpi-total-prac">42.268</span></div><div class="ksub">consumos registrados</div></div>
+    <div class="kcard" style="--kc:#00ffc8"><div class="klabel">Monto OSEP</div><div class="kval"><span id="kpi-monto-osep">$149,7M</span></div><div class="ksub"><span id="kpi-periodo">01–11 Mayo 2026</span> en el período</div></div>
+    <div class="kcard" style="--kc:#fb923c"><div class="klabel">Monto Afiliado</div><div class="kval"><span id="kpi-monto-afil">$56,9M</span></div><div class="ksub">coseguros del período</div></div>
+    <div class="kcard" style="--kc:#a78bfa"><div class="klabel">Afiliados Únicos</div><div class="kval"><span id="kpi-afiliados">3.806</span></div><div class="ksub">con al menos 1 prestación</div></div>
+    <div class="kcard" style="--kc:#facc15"><div class="klabel">Tipos de Práctica</div><div class="kval"><span id="kpi-tipos">283</span></div><div class="ksub">nomencladores distintos</div></div>
+  </div>
+
+  <div class="ub-banner">
+    <div class="ub-head">
+      <div class="lbl">Total Unidades Bioquímicas — período completo</div>
+      <div class="ub-big"><span id="kpi-total-ub">317.361,5</span> <sub>UB</sub></div>
+      <div class="ub-sub"><span id="kpi-cobertura">140 tipos de práctica con UB asignada · Cobertura: 38.732 de 42.268 prácticas (91,6%)</span></div>
+    </div>
+    <div class="ub-mini-row">
+      <div class="ub-mini"><div class="v"><span id="kpi-ub-prac">7,5</span></div><div class="l">UB / práctica</div></div>
+      <div class="ub-mini"><div class="v"><span id="kpi-ub-orden">~142</span></div><div class="l">UB / orden</div></div>
+      <div class="ub-mini"><div class="v"><span id="kpi-ub-afil">~87</span></div><div class="l">UB / afiliado</div></div>
+      <div class="ub-mini"><div class="v"><span id="kpi-osep-ub">$447</span></div><div class="l">$ OSEP / UB</div></div>
+      <div class="ub-mini"><div class="v"><span id="kpi-ub-dia">28,9k</span></div><div class="l">UB / día prom.</div></div>
+    </div>
+  </div>
+
+  <div class="st">Distribución por domicilio de atención</div>
+  <div class="cr c31">
+    <div class="cc"><h3>Prácticas por <em>efector — top 12</em></h3><div class="chart-h"><canvas id="c_dom"></canvas></div></div>
+    <div class="cc"><h3>Distribución monto <em>OSEP vs Afiliado</em></h3><div class="chart-h"><canvas id="c_torta"></canvas></div></div>
+  </div>
+
+  <div class="st">Top 15 prácticas — <em>todas las determinaciones (con código)</em></div>
+  <div class="tc">
+    <h3>Ranking global por cantidad · código · UB unitaria</h3>
+    <table><thead><tr>
+      <th>#</th><th>Cód.</th><th>An.</th><th>Descripción de la Práctica</th>
+      <th class="r">Cant.</th><th class="r">UB unit.</th><th class="r">UB total</th><th class="r">Monto OSEP</th>
+    </tr></thead><tbody id="t_global"></tbody></table>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ══ PARTE 2 ══════════════════════════════════════════ -->
+<div class="part-banner p2">
+  <div class="part-num">02</div>
+  <div class="part-title">
+    <h2>Prácticas Fuera de Convenio con Biofarma</h2>
+    <p>Determinaciones que no forman parte del acuerdo comercial con Droguería Biofarma · No generan pago en Unidades Bioquímicas</p>
+  </div>
+  <div class="part-tag" style="border-color:var(--danger);color:var(--danger)">FUERA DE CONVENIO BIOFARMA</div>
+</div>
+
+<div class="main">
+  <div class="st">Indicadores — prácticas <em class="r">fuera de convenio con Biofarma</em></div>
+  <div class="kgrid k4">
+    <div class="kcard" style="--kc:#f43f5e"><div class="klabel">Prácticas fuera de convenio</div><div class="kval" style="color:var(--danger)"><span id="kpi-sinub-prac">3.536</span></div><div class="ksub"><span id="kpi-sinub-pct">8,4%</span> del total del convenio</div></div>
+    <div class="kcard" style="--kc:#f43f5e"><div class="klabel">Monto OSEP fuera de convenio</div><div class="kval" style="color:var(--danger)"><span id="kpi-sinub-monto">$7,8M</span></div><div class="ksub"><span id="kpi-sinub-monto-d">$7.831.801 · 5,2% del total</span></div></div>
+    <div class="kcard" style="--kc:#f43f5e"><div class="klabel">Afiliados involucrados</div><div class="kval"><span id="kpi-sinub-afil">1.616</span></div><div class="ksub">con al menos 1 práctica fuera de convenio</div></div>
+    <div class="kcard" style="--kc:#f43f5e"><div class="klabel">Tipos de práctica</div><div class="kval"><span id="kpi-sinub-tipos">166</span></div><div class="ksub">nomencladores fuera de convenio Biofarma</div></div>
+  </div>
+
+  <div class="cr c2">
+    <div class="cc"><h3>Top 12 prácticas <em class="r">fuera de convenio Biofarma</em> — por cantidad</h3><div class="chart-h"><canvas id="c_s_cant"></canvas></div></div>
+    <div class="cc"><h3>Top 10 prácticas <em class="r">fuera de convenio Biofarma</em> — por monto OSEP</h3><div class="chart-h"><canvas id="c_s_monto"></canvas></div></div>
+  </div>
+
+  <div class="st">Detalle — determinaciones <em class="r">fuera del convenio Biofarma</em></div>
+  <div class="tc">
+    <h3>Top 15 prácticas fuera de convenio con Biofarma — por cantidad de consumos</h3>
+    <table><thead><tr>
+      <th>#</th><th>Cód.</th><th>An.</th><th>Descripción de la Práctica</th>
+      <th class="r">Cant.</th><th class="r">Monto OSEP</th><th>Volumen</th>
+    </tr></thead><tbody id="t_sinub"></tbody></table>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ══ PARTE 3 ══════════════════════════════════════════ -->
+<div class="part-banner p3">
+  <div class="part-num">03</div>
+  <div class="part-title">
+    <h2>Prácticas del Convenio Biofarma — Con Unidades Bioquímicas</h2>
+    <p>Determinaciones que generan pago en UB a Droguería Biofarma · Base de liquidación del acuerdo comercial</p>
+  </div>
+  <div class="part-tag" style="border-color:var(--accent2);color:var(--accent2)">CON UB · BIOFARMA</div>
+</div>
+
+<div class="main">
+  <div class="st">Indicadores — prácticas <em class="g">del convenio Biofarma</em></div>
+  <div class="kgrid k4">
+    <div class="kcard" style="--kc:#00ffc8"><div class="klabel">Prácticas con UB</div><div class="kval" style="color:var(--accent2)"><span id="kpi-conub-prac">38.732</span></div><div class="ksub"><span id="kpi-conub-pct">91,6%</span> del total del convenio</div></div>
+    <div class="kcard" style="--kc:#00ffc8"><div class="klabel">Monto OSEP con UB</div><div class="kval" style="color:var(--accent2)"><span id="kpi-conub-monto">$141,9M</span></div><div class="ksub"><span id="kpi-conub-monto-d">$141.862.480 · 94,8% del total</span></div></div>
+    <div class="kcard" style="--kc:#00ffc8"><div class="klabel">Afiliados involucrados</div><div class="kval"><span id="kpi-conub-afil">3.635</span></div><div class="ksub">con al menos 1 práctica con UB</div></div>
+    <div class="kcard" style="--kc:#00ffc8"><div class="klabel">Total UB a Biofarma</div><div class="kval" style="color:var(--accent2)"><span id="kpi-conub-ub">317.361,5</span></div><div class="ksub">UB consumidas en el período</div></div>
+  </div>
+
+  <div class="cr c2">
+    <div class="cc"><h3>Top 12 prácticas <em class="g">con UB</em> — por cantidad</h3><div class="chart-h"><canvas id="c_c_cant"></canvas></div></div>
+    <div class="cc"><h3>Top 12 prácticas — por <em class="g">UB total generadas</em></h3><div class="chart-h"><canvas id="c_c_ub"></canvas></div></div>
+  </div>
+
+  <div class="st">Detalle — determinaciones <em class="g">del convenio Biofarma</em></div>
+  <div class="tc">
+    <h3>Top 15 prácticas con UB — cantidad · UB unitaria · UB total · monto</h3>
+    <table><thead><tr>
+      <th>#</th><th>Cód.</th><th>An.</th><th>Descripción de la Práctica</th>
+      <th class="r">Cant.</th><th class="r">UB unit.</th><th class="r">UB total</th><th class="r">Monto OSEP</th><th>Vol. UB</th>
+    </tr></thead><tbody id="t_conub"></tbody></table>
+  </div>
+
+  <div class="st">Top afiliados — <em class="g">consumo del convenio Biofarma</em></div>
+  <div class="cr c2">
+    <div class="cc"><h3>Top 8 afiliados por <em class="g">monto OSEP — prácticas con UB</em></h3><div class="chart-h-sm"><canvas id="c_afil_m"></canvas></div></div>
+    <div class="cc"><h3>Top 8 afiliados por <em class="g">UB total consumidas</em></h3><div class="chart-h-sm"><canvas id="c_afil_ub"></canvas></div></div>
+  </div>
+
+  <div class="st">Evolución diaria — <em class="g">Unidades Bioquímicas del período</em></div>
+  <div class="cr c1">
+    <div class="cc"><h3>UB consumidas por día — <em class="g">línea punteada</em> · vs. prácticas diarias (eje secundario)</h3><div class="chart-h-lg"><canvas id="c_daily"></canvas></div></div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ══ TABLA COMPLETA DE PRÁCTICAS ══════════════════════ -->
+<div class="main" style="padding-bottom:8px">
+  <div class="st">Buscador de prácticas — <em>todas las determinaciones del período</em></div>
+
+  <div class="search-row">
+    <div class="search-inp-wrap" style="flex:1;min-width:220px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00c8ff" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="srch" type="text" placeholder="Buscar por nombre de práctica…" class="search-inp full">
+    </div>
+    <div class="search-inp-wrap" style="width:160px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00c8ff" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <input id="srchCod" type="text" placeholder="Código…" class="search-inp full">
+    </div>
+    <div class="f-btns">
+      <button class="f-btn all" id="fAll" data-filter="all">TODAS</button>
+      <button class="f-btn conub" id="fConUB" data-filter="conub">CON UB</button>
+      <button class="f-btn sinub" id="fSinUB" data-filter="sinub">SIN UB</button>
+    </div>
+    <div class="search-count" id="srchCount">283 prácticas</div>
+  </div>
+
+  <div class="tbl-wrap">
+    <div class="tbl-head">
+      <div class="th-fix" data-sort="0">Cód. ↕</div>
+      <div class="th-fix" data-sort="1">An. ↕</div>
+      <div class="th-fix nc"></div>
+      <div class="th-fix l" data-sort="2">Descripción de la Práctica ↕</div>
+      <div class="th-fix" data-sort="3">Cant. ↕</div>
+      <div class="th-fix" data-sort="4">UB unit. ↕</div>
+      <div class="th-fix" data-sort="5">UB total ↕</div>
+      <div class="th-fix" data-sort="6">Monto OSEP ↕</div>
+      <div class="th-fix nc" style="color:#facc15">Convenio</div>
+    </div>
+    <div id="tblBody" class="tbl-body"></div>
+    <div class="tbl-totales">
+      <div class="th-fix nc" style="color:#00c8ff">TOT.</div>
+      <div class="th-fix nc"></div>
+      <div class="th-fix nc"></div>
+      <div class="th-fix l nc" style="color:#7a98bc" id="tot-label">— prácticas filtradas</div>
+      <div class="th-fix nc" style="color:#e2eaf5" id="tot-cant">—</div>
+      <div class="th-fix nc" style="color:#00ffc8">—</div>
+      <div class="th-fix nc" style="color:#00ffc8;font-weight:600" id="tot-ub">—</div>
+      <div class="th-fix nc" style="color:#00c8ff" id="tot-osep">—</div>
+      <div class="th-fix nc"></div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <span>OSEP · Departamento de Bioquímica · Convenio 2.868</span>
+  <span>·</span>
+  <span>Prestador: Droguería Biofarma</span>
+</div>
+
+<!-- ── MÓDULOS JS (orden importa) ─────────────────────── -->
+<script src="js/data.js"></script>
+<script src="js/helpers.js"></script>
+<script src="js/state.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/aggregate.js"></script>
+<script src="js/kpis.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/tables.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>
