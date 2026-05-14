@@ -131,22 +131,69 @@ function aggregateAll() {
   };
 }
 
+// Reconstruye el STATE desde BASE_ALL_PRAC aplicando los overrides actuales.
+// Se usa cuando no hay sesiones SISAO cargadas — permite que los cambios
+// de UB que hace el usuario se reflejen aún sin archivos cargados.
+function baseStateFromOverrides() {
+  // r en BASE_ALL_PRAC: [cod, analo, nombre, cant, ub_unit_orig, ub_total_orig, osep_M]
+  const allObj = BASE_ALL_PRAC.map(r => {
+    const c = r[0], a = r[1], p = r[2], n = r[3];
+    const uu = getUB(c, a);          // respeta MANUAL_UB_OVERRIDES
+    return {c, a, p, n, uu, ut: uu * n, osep: (r[6] || 0) * 1e6};
+  }).sort((x, y) => y.n - x.n);
+
+  const conUB = allObj.filter(r => r.uu  >  0);
+  const sinUB = allObj.filter(r => r.uu === 0);
+
+  const totalPrac = allObj.reduce((s, r) => s + r.n,    0);
+  const totalUB   = allObj.reduce((s, r) => s + r.ut,   0);
+  const osepConUB = conUB.reduce((s, r) => s + r.osep, 0);
+
+  // Tabla buscadora — osep en millones para que fM lo formatee directo
+  ALL_PRAC = allObj.map(r => [
+    r.c, r.a, r.p, r.n, r.uu,
+    Math.round(r.ut * 10) / 10,
+    Math.round(r.osep / 1e4) / 100,
+  ]);
+
+  return {
+    periodo:        BASE_STATE.periodo,
+    diasPeriodo:    BASE_STATE.diasPeriodo,
+    totalPrac:      Math.round(totalPrac),
+    totalOsep:      BASE_STATE.totalOsep,
+    totalAfil:      BASE_STATE.totalAfil,
+    totalAfiliados: BASE_STATE.totalAfiliados,
+    totalUB:        Math.round(totalUB * 10) / 10,
+    pracConUB:      Math.round(conUB.reduce((s,r) => s + r.n, 0)),
+    pracSinUB:      Math.round(sinUB.reduce((s,r) => s + r.n, 0)),
+    osepConUB:      Math.round(osepConUB),
+    osepSinUB:      Math.max(BASE_STATE.totalOsep - Math.round(osepConUB), 0),
+    tiposPrac:      allObj.length,
+    tiposConUB:     conUB.length,
+    tiposSinUB:     sinUB.length,
+    dom:            BASE_STATE.dom,
+    topGlobal:      allObj.slice(0, 15),
+    topConUB:       conUB.sort((x,y) => y.n - x.n).slice(0, 15),
+    topSinUB:       sinUB.sort((x,y) => y.n - x.n).slice(0, 15),
+    afil:           BASE_STATE.afil,
+    daily:          BASE_STATE.daily,
+  };
+}
+
 // Orquestador: recalcula todo y vuelve a pintar
 function renderAll() {
-  let displayState = BASE_STATE;
-  let isBase = true;
+  let displayState;
   if (SESSIONS.length > 0) {
     try {
       const agg = aggregateAll();
-      if (agg && agg.totalPrac > 0) {
-        displayState = agg;
-        isBase = false;
-      }
-    } catch(e) { console.error('aggregateAll:', e); }
+      displayState = (agg && agg.totalPrac > 0) ? agg : baseStateFromOverrides();
+    } catch(e) {
+      console.error('aggregateAll:', e);
+      displayState = baseStateFromOverrides();
+    }
+  } else {
+    displayState = baseStateFromOverrides();
   }
-
-  // Si estamos en BASE_STATE, restaurar ALL_PRAC al fallback
-  if (isBase) ALL_PRAC = BASE_ALL_PRAC.slice();
 
   try { buildAllCharts(displayState); } catch(e) { console.error('charts:', e); }
   try { buildTables(displayState);    } catch(e) { console.error('tables:', e); }
