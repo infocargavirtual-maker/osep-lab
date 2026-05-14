@@ -194,7 +194,7 @@ function proposeUBChange(cod, analo, name, currentUB) {
   if (currentUB > 0) {
     // SACAR del convenio — UB = 0, sin modal
     PENDING_CHANGES.push({key, name, cod, analo, oldUB:currentUB, newUB:0, action:'SACAR del convenio Biofarma'});
-    renderPendingPanel();
+    renderPendingPanel(true);
     renderTable();
   } else {
     // AGREGAR al convenio — pedir UB
@@ -226,12 +226,12 @@ function confirmAddToConvenio() {
     oldUB:0, newUB:val, action:'AGREGAR al convenio Biofarma (' + val + ' UB)',
   });
   closeModal();
-  renderPendingPanel();
+  renderPendingPanel(true);
   renderTable();
 }
 
 // ── Panel pendientes ─────────────────────────────────
-function renderPendingPanel() {
+function renderPendingPanel(scrollIntoView) {
   const panel = document.getElementById('pending-panel');
   if (!panel) return;
   if (PENDING_CHANGES.length === 0) {
@@ -240,6 +240,12 @@ function renderPendingPanel() {
     return;
   }
   panel.style.display = 'block';
+  if (scrollIntoView) {
+    panel.scrollIntoView({behavior:'smooth', block:'center'});
+    panel.classList.remove('flash');
+    void panel.offsetWidth; // restart animation
+    panel.classList.add('flash');
+  }
 
   // Encabezado + botones
   panel.innerHTML = `

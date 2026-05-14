@@ -6,7 +6,7 @@
 <title>Convenio 2.868 – Laboratorio OSEP</title>
 
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=2">
 
 <script src="libs/chart.umd.min.js"></script>
 <script src="libs/xlsx.full.min.js"></script>
@@ -221,8 +221,14 @@
 
   <div class="st">Top afiliados — <em class="g">consumo del convenio Biofarma</em></div>
   <div class="cr c2">
-    <div class="cc"><h3>Top 8 afiliados por <em class="g">monto OSEP — prácticas con UB</em></h3><div class="chart-h-sm"><canvas id="c_afil_m"></canvas></div></div>
-    <div class="cc"><h3>Top 8 afiliados por <em class="g">UB total consumidas</em></h3><div class="chart-h-sm"><canvas id="c_afil_ub"></canvas></div></div>
+    <div class="cc">
+      <h3>Top 8 afiliados por <em class="g">monto OSEP — prácticas con UB</em></h3>
+      <div class="chart-h-sm chart-wrap"><canvas id="c_afil_m"></canvas><div class="chart-empty" id="c_afil_m_empty">Sin datos de afiliados — cargá un archivo SISAO arriba</div></div>
+    </div>
+    <div class="cc">
+      <h3>Top 8 afiliados por <em class="g">UB total consumidas</em></h3>
+      <div class="chart-h-sm chart-wrap"><canvas id="c_afil_ub"></canvas><div class="chart-empty" id="c_afil_ub_empty">Sin datos de afiliados — cargá un archivo SISAO arriba</div></div>
+    </div>
   </div>
 
   <div class="st">Evolución diaria — <em class="g">Unidades Bioquímicas del período</em></div>
@@ -288,15 +294,15 @@
 </div>
 
 <!-- ── MÓDULOS JS (orden importa) ─────────────────────── -->
-<script src="js/data.js"></script>
-<script src="js/helpers.js"></script>
-<script src="js/state.js"></script>
-<script src="js/parser.js"></script>
-<script src="js/aggregate.js"></script>
-<script src="js/kpis.js"></script>
-<script src="js/charts.js"></script>
-<script src="js/tables.js"></script>
-<script src="js/main.js"></script>
+<script src="js/data.js?v=2"></script>
+<script src="js/helpers.js?v=2"></script>
+<script src="js/state.js?v=2"></script>
+<script src="js/parser.js?v=2"></script>
+<script src="js/aggregate.js?v=2"></script>
+<script src="js/kpis.js?v=2"></script>
+<script src="js/charts.js?v=2"></script>
+<script src="js/tables.js?v=2"></script>
+<script src="js/main.js?v=2"></script>
 
 </body>
 </html>

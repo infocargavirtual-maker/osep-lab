@@ -139,7 +139,17 @@ function buildAllCharts(s) {
   );
 
   // ── PARTE 3: Afiliados top 8 ───────────────────────
-  if (s.afil && s.afil.length > 0) {
+  const hasAfil = s.afil && s.afil.length > 0;
+  ['c_afil_m_empty', 'c_afil_ub_empty'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('show', !hasAfil);
+  });
+  ['c_afil_m', 'c_afil_ub'].forEach(id => {
+    const c = document.getElementById(id);
+    if (c) c.style.display = hasAfil ? '' : 'none';
+  });
+
+  if (hasAfil) {
     _charts.afilM = _vBar(
       'c_afil_m',
       s.afil.map(a => (a.n || a.id).split(' ').slice(0, 2).join(' ')),
@@ -157,12 +167,6 @@ function buildAllCharts(s) {
       B,
       v => fN(v) + ' UB'
     );
-  } else {
-    // Limpiar canvas si no hay datos
-    ['c_afil_m', 'c_afil_ub'].forEach(id => {
-      const c = document.getElementById(id);
-      if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height);
-    });
   }
 
   // ── PARTE 3: Evolución diaria ─────────────────────

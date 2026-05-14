@@ -45,6 +45,11 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
 .sessions-panel-head span{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7a98bc;letter-spacing:1px}
 .btn-clear-all{background:none;border:1px solid rgba(244,63,94,.4);border-radius:2px;color:#f43f5e;font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px 10px;cursor:pointer;letter-spacing:.5px}
 .pending-panel{display:none;border:1px solid #facc15;border-radius:3px;overflow:hidden;margin-top:8px}
+.pending-panel.flash{animation:pendingFlash .8s ease-out 2}
+@keyframes pendingFlash{
+  0%,100%{box-shadow:0 0 0 0 rgba(250,204,21,0)}
+  50%{box-shadow:0 0 0 6px rgba(250,204,21,.45)}
+}
 
 /* ── MODAL UB ───────────────────────────────────────── */
 .ub-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9998;align-items:center;justify-content:center}
@@ -116,6 +121,9 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
 .chart-h{height:290px}
 .chart-h-sm{height:260px}
 .chart-h-lg{height:330px}
+.chart-wrap{position:relative}
+.chart-empty{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);padding:0 20px;border:1px dashed rgba(122,152,188,.25);border-radius:3px;background:rgba(10,15,30,.4)}
+.chart-empty.show{display:flex}
 
 /* ── TABLE CARDS ────────────────────────────────────── */
 .tc{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:18px;margin-bottom:16px}
