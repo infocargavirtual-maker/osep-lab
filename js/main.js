@@ -88,17 +88,29 @@ function _bindButtons() {
 }
 
 // ── INIT ─────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // Fecha de generado
   const hg = document.getElementById('header-generado');
   if (hg) hg.textContent = new Date().toLocaleDateString('es-AR');
 
   _bindUploadZone();
   _bindButtons();
-
-  // Estado activo del filtro
   setFilter(_filter);
 
-  // Render principal
+  // 1) Migrar datos viejos de localStorage si existen
+  try { await migrateLegacyLocalStorage(); } catch(e) { console.warn('migración:', e); }
+
+  // 2) Cargar todas las sesiones desde IndexedDB (puede tener 50MB+)
+  try {
+    const saved = await loadAllSessionsFromStorage();
+    if (saved && saved.length) {
+      SESSIONS.push(...saved.filter(s => s && s.id && s.pracMap));
+      console.log('Sesiones cargadas desde IndexedDB:', SESSIONS.length);
+    }
+  } catch(e) {
+    console.warn('No se pudieron cargar sesiones:', e);
+  }
+
+  // 3) Primer render con los datos persistidos
   renderAll();
 });

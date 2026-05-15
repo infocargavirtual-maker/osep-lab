@@ -166,13 +166,18 @@ function processFile(file) {
         afilIds:   [...afilIds],
       };
       SESSIONS.push(session);
-      saveSessions();
+      saveSessionToStorage(session).catch(err => {
+        alert('No se pudo guardar el archivo "' + file.name + '" de forma permanente:\n' + err.message + '\n\nLos datos siguen visibles en pantalla, pero se van a perder si refrescás.');
+      });
 
       renderAll();
 
+      // Feedback acumulado: cuántos archivos hay en total y suma de prácticas
+      const accTotal = SESSIONS.reduce((s,x) => s + (x.totalPrac||0), 0);
+      const accFiles = SESSIONS.length;
       setMsg(
-        '✓ Agregado: ' + file.name, G,
-        `${fN(dataRows.length)} registros · ${fN(Math.round(totalPrac))} prácticas · período: ${periodo}`,
+        '✓ Agregado: ' + file.name + '  ·  TOTAL ACUMULADO: ' + accFiles + ' archivo' + (accFiles>1?'s':''), G,
+        `Este archivo: ${fN(dataRows.length)} registros · ${fN(Math.round(totalPrac))} prácticas · ${periodo}  ┃  Acumulado: ${fN(Math.round(accTotal))} prácticas en ${accFiles} archivo${accFiles>1?'s':''}`,
         G
       );
 
@@ -190,13 +195,13 @@ function removeSession(id) {
   const s = SESSIONS[idx];
   if (!confirm('¿Eliminás el archivo "' + s.filename + '" (' + s.periodo + ')?\nSus datos se quitarán del informe.')) return;
   SESSIONS.splice(idx, 1);
-  saveSessions();
+  deleteSessionFromStorage(id);
   renderAll();
 }
 
 function clearAllSessions() {
   if (!confirm('¿Eliminás TODOS los archivos cargados? El informe volverá a los datos de base.')) return;
-  SESSIONS = [];
-  saveSessions();
+  SESSIONS.length = 0;
+  clearAllSessionsStorage();
   renderAll();
 }

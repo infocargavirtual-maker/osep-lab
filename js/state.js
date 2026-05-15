@@ -8,15 +8,9 @@ const SK_SESSIONS    = 'osep_sessions_v1';
 const SK_OVERRIDES   = 'osep_ub_overrides_v1';
 const SK_NEW_PRACS   = 'osep_new_pracs_v1';
 
-let SESSIONS = (() => {
-  try {
-    const raw = JSON.parse(localStorage.getItem(SK_SESSIONS) || '[]');
-    return raw.filter(s => s && s.id && s.pracMap && typeof s.pracMap === 'object');
-  } catch(e) {
-    localStorage.removeItem(SK_SESSIONS);
-    return [];
-  }
-})();
+// SESSIONS arranca vacío; se rellena async desde IndexedDB en main.js antes
+// de la primera llamada a renderAll().
+let SESSIONS = [];
 
 let MANUAL_UB_OVERRIDES = (() => {
   try { return JSON.parse(localStorage.getItem(SK_OVERRIDES) || '{}'); }
@@ -41,10 +35,7 @@ let _modalTarget = null;
 let ALL_PRAC = BASE_ALL_PRAC.slice();
 
 // ── persistencia ──────────────────────────────────────
-function saveSessions() {
-  try { localStorage.setItem(SK_SESSIONS, JSON.stringify(SESSIONS)); }
-  catch(e){ console.warn('localStorage lleno', e); }
-}
+// Sesiones SISAO: IndexedDB (más capacidad). Overrides y nuevas: localStorage (chicos).
 function saveOverrides() {
   try { localStorage.setItem(SK_OVERRIDES, JSON.stringify(MANUAL_UB_OVERRIDES)); }
   catch(e){}

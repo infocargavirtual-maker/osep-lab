@@ -379,15 +379,24 @@ function renderSessionsPanel() {
   if (SESSIONS.length === 0) {
     panel.style.display = 'none';
     list.innerHTML = '';
+    // Actualizar el contador del header del panel si existe
+    const head = document.querySelector('.sessions-panel-head span');
+    if (head) head.textContent = 'ARCHIVOS CARGADOS';
     return;
   }
   panel.style.display = 'block';
   list.innerHTML = '';
 
+  // Header con contador prominente — "N ARCHIVOS · M PRÁCTICAS ACUMULADAS"
+  const totalPrac = SESSIONS.reduce((s,x) => s + (x.totalPrac||0), 0);
+  const head = document.querySelector('.sessions-panel-head span');
+  if (head) head.textContent = `${SESSIONS.length} ARCHIVO${SESSIONS.length>1?'S':''} ACUMULADO${SESSIONS.length>1?'S':''} · ${fN(Math.round(totalPrac))} PRÁCTICAS TOTALES`;
+
   SESSIONS.forEach((s, i) => {
     const item = document.createElement('div');
     item.style.cssText = `display:flex;align-items:center;gap:12px;padding:8px 14px;background:${i%2===0?'#111827':'#131e31'};border-left:3px solid ${B}`;
     item.innerHTML = `
+      <div style="flex-shrink:0;width:28px;height:28px;border-radius:50%;background:rgba(0,200,255,.15);color:${B};font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">${i+1}</div>
       <div style="flex:1;min-width:0">
         <div class="fn" style="font-size:12px;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
         <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7a98bc;margin-top:2px">
